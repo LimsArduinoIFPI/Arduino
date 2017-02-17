@@ -1,0 +1,18 @@
+{
+  "name": "serverlocal",
+  "version": "1.0.0",
+  "description": "App bridge-socket-ioT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node serverlocal.js"
+  },
+  "author": "juscilan.com",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "johnny-five": "^0.9.61",
+    "serialport": "^4.0.1"
+  }
+}

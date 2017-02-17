@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container-fluid">
+        <p id="mensagem"></p>
+        <input type="button" class="btn btn-primary btn-large" style="width:100%" value="Startar Servidor PaaS" id="btnSet" >
+        </br>
+        </br>
+        <input type="button" class="btn btn-primary btn-large" style="width:100%" value="Ligar Led" id="btnLed" >
+        <p id="log"></p>
+        <p id="foot"><a href="http://www.juscilan.com">2016 © - juscilan.com‎</a></p>
+    </div>
+    <script src=/socket.io/socket.io.js></script>
+    <script src=https://code.jquery.com/jquery-1.9.1.min.js></script>
+    <script src=https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js></script>
+    <script>
+        /*
+        Script em Js NodeJs Adaptado por Juscilan Moreto
+        Responsavel por implementar a parte client do socket.io
+        2016 © - juscilan.com‎
+        */
+
+        // Iniciando Socket Client
+        var socket = io.connect();
+        var isServ ;
+        const adressLocal = 'http://localhost:3012';
+        const adressWeb   = 'http://seu-app-iot.herokuapp.com/';
+
+        //Objeto interno de acoes a serem feitas no embarcado
+        function ObjAcoes(ledon,ledoff,relon,reloff){
+             this.ledon     = ledon
+            ,this.ledoff    = ledoff
+        };
+
+        var objacoes = new ObjAcoes(false,false);
+
+        //Objeto post Ajax
+        function ObjPost (url,data) {
+             this.url       = url
+            ,this.data      = data
+        }
+
+        //isServer é emitido pelo socket.io no load da pagina
+        socket.on('isServer', function(dataAction){
+
+            //se eu ja tiver o objeto SessionState trata-se de um client
+            if(Object.keys(dataAction).length > 0){
+
+                $('#btnSet').hide();
+
+                $('#btnLed').show();
+
+                $('#mensagem').show();
+                $('#mensagem').css("color","#0000FF");
+                $('#mensagem').html('Instância client remoto </br> Execute uma ação abaixo:');
+
+                isServ = false;
+
+                objacoes =  dataAction;
+
+            }else{
+                $('#btnSet').show();
+            };
+
+        });
+
+        // Executa a ação de resposta em BroadCast
+        socket.on('ExecActionRes', function(dataAction){
+            //Aqui eu comparo se estou na instancia isServ
+            if(isServ){
+                var objpost = new ObjPost(adressLocal,dataAction)
+                enviaPost(objpost);
+            }
+        });
+
+        //funcao interna para enviar um post
+        function enviaPost(dataPost){
+
+            var objForPost = {
+                url: dataPost.url,
+                type: "POST",
+                data: JSON.stringify(dataPost.data),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+            };
+
+            $.ajax (objForPost);
+        }
+
+        //Jquery onload
+        $(function(){
+
+            $('#btnSet').click(function(){
+                socket.emit('sendreq', objacoes);
+                isServ = true;
+                $('#btnSet').hide();
+                return false;
+            });
+
+            //Acoes click botao
+            $('#btnLed').click(function(){
+
+                objacoes = new ObjAcoes(false,false);
+
+                if($('#btnLed').val() == 'Ligar Led'){
+                    objacoes.ledon = true;
+                    $('#btnLed').val('Desligar Led');
+
+                }else{
+                    objacoes.ledoff = true;
+                    $('#btnLed').val('Ligar Led');
+
+                }
+                socket.emit('ExecAction', objacoes);
+
+                return false;
+            });
+
+            //Inicia os elementos html load
+            $('#btnLed').hide();
+
+            $('#mensagem').css("color","#FF0000");
+            $('#mensagem').html('Instância bridge não fechar essa aba e nem recarregar. </br> App socket rodando...');
+
+        });
+    </script>
+  </body>
+</html>
